@@ -47,7 +47,7 @@ async function getUpdateCustomer(emailExist , phoneExist , contactUserData){
     contactUserData.forEach(res => {
       if(res.email) setEmail.add(res.email)
       if(res.phoneNumber) setPhone.add(res.phoneNumber)
-      if(res.linkedId) return res.linkedId
+      if(res.linkedId)  setLinkedId.add(res.linkedId)
    } )
 
     return {
@@ -118,7 +118,7 @@ const customerRegister = async(req , res , next)=>{
         contactUserData.forEach(async (val) => {
 
           //Email is Commmon Phone differ created New Contact secondary Using PhoneDiffer
-          if(val.email === email){
+          if(val.email && val.email === email){
 
             const customer = await Customer.create({
 
@@ -151,7 +151,7 @@ const customerRegister = async(req , res , next)=>{
 
           // Phoe is Commmon , Email differ created New Contact Secondary Using email Differ
 
-          if(val.phoneNumber === phoneNumber){
+          if(val.phoneNumber && val.phoneNumber === phoneNumber){
 
             const customer = await Customer.create({
 

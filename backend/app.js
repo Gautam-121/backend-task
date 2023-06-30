@@ -9,7 +9,7 @@ const customerRouter = require("./route/customerRouter.js")
 
 app.get("/getData" , (req , res) => {
     res.status(200).json({
-        message : "all Done"
+     message : "all Done"
     })
 })
 
