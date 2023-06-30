@@ -11,7 +11,7 @@ process.on("uncaughtException" , (error)=>{
 })
 
 //Config Environmental directary
-dotenv.config({path : "backend/config/.env"})
+dotenv.config({path : "config/.env"})
 
 //Mongoose Connection
 connection()
