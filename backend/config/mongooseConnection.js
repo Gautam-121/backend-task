@@ -6,6 +6,7 @@ const connection = ()=>{
         useNewUrlParser : true
     })
     .then(data => console.log("mongoDB is connected on" , data.connection.host))
+    .catch((err)=> console.log(err))
 }
 
 

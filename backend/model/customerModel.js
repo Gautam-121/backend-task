@@ -1,18 +1,17 @@
 const mongoose = require("mongoose");
-const { phoneNumberRegex , emailRegex } = require("../utils/helper.js");
+// const {phoneNumberRegex}   = require("../utils/helper.js");
 
 //Customer Model Schema
 const customerSchema = new mongoose.Schema({
 
   phoneNumber: {
     type: String,
-    allowNull: true
-    // match: [phoneNumberRegex, "ph-number is not vald"],
+    allowNull: true,
+    // match: [phoneNumberRegex, "ph-number is not valid"],
   },
   email: {
     type: String,
     allowNull: true
-    // required: [true, "email must not be empty"],
     // match: [emailRegex, "email is not valid"],
   },
   linkedId: {

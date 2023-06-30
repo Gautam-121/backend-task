@@ -1,5 +1,6 @@
 const Customer = require("../model/customerModel.js")
 const ErrorHandler = require("../utils/errorHandler.js")
+const {phoneNumberRegex , emailRegex} = require("../utils/helper.js")
 
 const setEmail = new Set()
 const setPhone = new Set()
@@ -59,6 +60,73 @@ async function getUpdateCustomer(emailExist , phoneExist , contactUserData){
       }
     }
   }
+
+async function getSecondary(user , email , phoneNumber){
+
+  for(let i = 0 ; i<user.length ; i++){
+
+     //Email is Commmon Phone differ created New Contact secondary Using PhoneDiffer
+     if(user[i].email && user[i].email === email){
+
+      const customer = await Customer.create({
+
+        email,
+        phoneNumber : phoneNumber,
+        linkedId : user[i].linkPrecedence === "primary" ? user[i]._id : user[i].linkedId,
+        linkPrecedence : "secondary",
+        createdAt : new Date(),
+        updatedAt : new Date()
+
+      })
+
+      user.forEach(res => {
+        if(res.email) setEmail.add(res.email)
+        if(res.phoneNumber) setPhone.add(res.phoneNumber)
+        if(res.linkedId) setLinkedId.add(res.linkedId)
+      })
+
+      return {
+
+        primaryContactId : customer.linkedId,
+        emails : [...setEmail.values()],
+        phoneNumber : [phoneNumber, ...setPhone.values()],
+        secondaryContactIds : [customer._id , ...setLinkedId.values()]
+      }
+    }
+
+    // Phoe is Commmon , Email differ created New Contact Secondary Using email Differ
+    if(user[i].phoneNumber && user[i].phoneNumber === phoneNumber){
+
+      const customer = await Customer.create({
+
+        email : email,
+        phoneNumber,
+        linkedId : user[i].linkPrecedence === "primary" ? user[i]._id : user[i].linkedId,
+        linkPrecedence : "secondary",
+        createdAt : new Date(),
+        updatedAt : new Date()
+
+      })
+
+      contactUserData.forEach(res => {
+
+        if(res.email) setEmail.add(res.email)
+        if(res.phoneNumber) setPhone.add(res.phoneNumber)
+        if(res.linkedId) setLinkedId.add(res.linkedId)
+
+      })
+
+      return {
+
+        primaryContactId : customer.linkedId,
+        emails : [email , ...setEmail.values()],
+        phoneNumber : [...setPhone.values()],
+        secondaryContactIds : [customer._id , ...setLinkedId.values()]
+      }
+    }
+
+  }
+}
   
 
 const customerRegister = async(req , res , next)=>{
@@ -71,6 +139,14 @@ const customerRegister = async(req , res , next)=>{
             return next(new ErrorHandler("Please send at least one data" , 400))
         }
 
+        if(phoneNumber && !phoneNumberRegex.test(phoneNumber)){
+          return next(new ErrorHandler("ph-Number is Invalid"))
+        }
+
+        if(email && !emailRegex.test(email)){
+          return next(new ErrorHandler("Email is Invalid"))
+        }
+
         const contactUserData = await Customer.find({
             $or: [
               { email : email ? email : "" },
@@ -78,10 +154,17 @@ const customerRegister = async(req , res , next)=>{
             ],
           })
 
+
         //new Customer Created Primary Contact
         if(contactUserData.length === 0){
             const contactCreate = await createNewContact(email , phoneNumber)
             return res.status(200).json(contactCreate)
+        }
+
+        const isAlready = await Customer.findOne({email : email , phoneNumber : phoneNumber})
+
+        if(isAlready){
+          return next(new ErrorHandler("This User already exist" , 400))
         }
 
         const emailExist = {}
@@ -90,7 +173,7 @@ const customerRegister = async(req , res , next)=>{
       //Email and Phone-Number both exist Update the customer
         contactUserData.forEach(val => {
 
-          if(val.email === email && val.linkPrecedence === "primary"){
+          if(email && val.email === email && val.linkPrecedence === "primary"){
 
             emailExist.isPresent = true
             emailExist._id  = val._id,
@@ -98,7 +181,7 @@ const customerRegister = async(req , res , next)=>{
 
           }
 
-          if(val.phoneNumber === phoneNumber && val.linkPrecedence === "primary"){
+          if(phoneNumber && val.phoneNumber === phoneNumber && val.linkPrecedence === "primary"){
 
             phoneExist.isPresent = true
             phoneExist._id = val._id,
@@ -114,74 +197,12 @@ const customerRegister = async(req , res , next)=>{
           return res.status(200).json(updateCustomer)
         }
 
-        //If only one Thing is Common One different created Secondary Contact
-        contactUserData.forEach(async (val) => {
+        const addSecondaryCustomer = await getSecondary(contactUserData , email , phoneNumber)
 
-          //Email is Commmon Phone differ created New Contact secondary Using PhoneDiffer
-          if(val.email && val.email === email){
-
-            const customer = await Customer.create({
-
-              email,
-              phoneNumber : phoneNumber,
-              linkedId : val.linkPrecedence === "primary" ? val._id : val.linkedId,
-              linkPrecedence : "secondary",
-              createdAt : new Date(),
-              updatedAt : new Date()
-
-            })
-
-            contactUserData.forEach(res => {
-
-              if(res.email) setEmail.add(res.email)
-              if(res.phoneNumber) setPhone.add(res.phoneNumber)
-              if(res.linkedId) setLinkedId.add(res.linkedId)
-
-            })
-
-            return res.status(200).json({
-
-              primaryContactId : customer.linkedId,
-              emails : [...setEmail.values()],
-              phoneNumber : [phoneNumber, ...setPhone.values()],
-              secondaryContactIds : [customer._id , ...setLinkedId.values()]
-
-            })
-          }
-
-          // Phoe is Commmon , Email differ created New Contact Secondary Using email Differ
-
-          if(val.phoneNumber && val.phoneNumber === phoneNumber){
-
-            const customer = await Customer.create({
-
-              email : email,
-              phoneNumber,
-              linkedId : val.linkPrecedence === "primary" ? val._id : val.linkedId,
-              linkPrecedence : "secondary",
-              createdAt : new Date(),
-              updatedAt : new Date()
-
-            })
-
-            contactUserData.forEach(res => {
-
-              if(res.email) setEmail.add(res.email)
-              if(res.phoneNumber) setPhone.add(res.phoneNumber)
-              if(res.linkedId) setLinkedId.add(res.linkedId)
-
-            })
-
-            return res.status(200).json({
-
-              primaryContactId : customer.linkedId,
-              emails : [email , ...setEmail.values()],
-              phoneNumber : [...setPhone.values()],
-              secondaryContactIds : [customer._id , ...setLinkedId.values()]
-
-            })
-          }
+        return res.status(200).json({
+          contact : addSecondaryCustomer
         })
+
     }catch(err){
         return next(new ErrorHandler(err , 500))
     }
