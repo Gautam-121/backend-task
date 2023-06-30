@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-// const {phoneNumberRegex}   = require("../utils/helper.js");
 
 //Customer Model Schema
 const customerSchema = new mongoose.Schema({
@@ -7,12 +6,12 @@ const customerSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
     allowNull: true,
-    // match: [phoneNumberRegex, "ph-number is not valid"],
+    default : null
   },
   email: {
     type: String,
-    allowNull: true
-    // match: [emailRegex, "email is not valid"],
+    allowNull: true,
+    default : null
   },
   linkedId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -40,7 +39,6 @@ const customerSchema = new mongoose.Schema({
     type: Date,
     default : null
   },
-  // secondaryContacts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'contact' }],
 });
 
 module.exports = mongoose.model("contact", customerSchema);
