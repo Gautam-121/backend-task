@@ -108,7 +108,7 @@ async function getSecondary(user , email , phoneNumber){
 
       })
 
-      contactUserData.forEach(res => {
+      user.forEach(res => {
 
         if(res.email) setEmail.add(res.email)
         if(res.phoneNumber) setPhone.add(res.phoneNumber)
@@ -204,7 +204,7 @@ const customerRegister = async(req , res , next)=>{
         })
 
     }catch(err){
-        return next(new ErrorHandler(err , 500))
+        return next(new ErrorHandler(err.meassage , 500))
     }
 }
 
